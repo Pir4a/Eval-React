@@ -127,8 +127,8 @@ export default function UserList() {
     threshold={0.1}
   
     delay={0.1}>
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto w-[86%] max-w-6xl px-6 py-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SearchBar value={search} onChange={setSearch} />
         <div className="flex items-center gap-3">
           <button
@@ -144,13 +144,13 @@ export default function UserList() {
       {initialLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: pageSize }).map((_, i) => (
-            <div key={i} className="group flex items-center gap-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+            <div key={i} className="group flex items-center gap-4 rounded-xl border border-pink-400/40 bg-[#060010] p-4">
               <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
               <div className="flex-1 min-w-0 space-y-2">
-                <div className="h-4 w-1/2 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded" />
-                <div className="h-3 w-2/3 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded" />
+                <div className="h-4 w-1/2 bg-pink-400/30 animate-pulse rounded" />
+                <div className="h-3 w-2/3 bg-pink-400/20 animate-pulse rounded" />
               </div>
-              <div className="h-6 w-6 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded" />
+              <div className="h-6 w-6 bg-pink-400/30 animate-pulse rounded" />
             </div>
           ))}
         </div>

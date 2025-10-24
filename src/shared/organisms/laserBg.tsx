@@ -10,11 +10,10 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
   return (
     <div 
       style={{ 
-        height: '1500px', 
+        height: '100vh', 
         position: 'relative', 
         overflow: 'hidden',
-        backgroundColor: '#060010',
-        transform: 'translateY(-20%)'
+        backgroundColor: '#060010'
       }}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -36,7 +35,7 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
     >
       <LaserFlow
         horizontalBeamOffset={0.1}
-        verticalBeamOffset={0.0}
+        verticalBeamOffset={0.3}
         color="#FF79C6"
       />
       
@@ -44,20 +43,22 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: 'translateX(-50%)',
+        transform: 'translate(-50%, -50%)',
         width: '86%',
         height: '60%',
         backgroundColor: '#060010',
         borderRadius: '20px',
         border: '2px solid #FF79C6',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'stretch',
+        justifyContent: 'stretch',
         color: 'white',
-        fontSize: '2rem',
-        zIndex: 6
+        zIndex: 6,
+        overflow: 'hidden'
       }}>
-        {children}
+        <div style={{ width: '100%', height: '100%', overflow: 'auto', padding: '24px' }}>
+          {children}
+        </div>
       </div>
 
       <img
