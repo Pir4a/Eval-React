@@ -5,6 +5,7 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import UserPage from './pages/UserPage'
 import NotFound from './pages/NotFound'
+import ErrorTest from './pages/ErrorTest'
 import { Navbar } from './shared/organisms/Navbar'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/user/:id" element={<UserPage />} />
+          <Route path="/error-test" element={<ErrorTest />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

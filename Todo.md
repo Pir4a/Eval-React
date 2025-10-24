@@ -39,9 +39,9 @@ Attendus
 • Ajouter :
 X Système de favoris : clic sur une étoile de chaque Card → ajout/suppression,
 persistant via localStorage.
-• Thème clair/sombre géré par un état global.
+X Thème clair/sombre géré par un état global.
 • Tri dynamique via un menu déroulant.
-• Composant de chargement visuel (spinner ou skeleton).
+X Composant de chargement visuel (spinner ou skeleton).
 • Message d’erreur stylisé avec possibilité de relancer la requête.
 • Utilisation de useMemo pour optimiser le tri et le filtrage.
 • Ajouter de petites transitions CSS (fade-in, hover) pour rendre l’interface vivante.

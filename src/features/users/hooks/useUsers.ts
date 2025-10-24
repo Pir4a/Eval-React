@@ -23,6 +23,8 @@ type Api = {
   setSort: (k: SortKey, d: SortDir) => void
   setPage: (p: number) => void
   refetch: () => Promise<void>
+  fetchWithError: () => Promise<void>
+  fetchWith400Error: () => Promise<void>
 }
 
 export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
@@ -115,6 +117,60 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
     })
   }, [])
 
+  const fetchWithError = useCallback(async () => {
+    setState((s) => ({ ...s, loading: true, error: null }))
+    
+    try {
+      // This endpoint will always fail (404 - non-existent endpoint)
+      const response = await fetch('https://dummyjson.com/users/this-endpoint-does-not-exist-404')
+      
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      setState((s) => ({ ...s, loading: false, users: data.users || [] }))
+    } catch (e) {
+      setState((s) => ({ 
+        ...s, 
+        loading: false, 
+        error: e instanceof Error ? e.message : 'Erreur réseau inconnue',
+        users: []
+      }))
+    }
+  }, [])
+
+  const fetchWith400Error = useCallback(async () => {
+    setState((s) => ({ ...s, loading: true, error: null }))
+    
+    try {
+      // Using a valid endpoint but with invalid query parameters to trigger 400
+      const response = await fetch('https://dummyjson.com/users?limit=invalid&skip=bad')
+      
+      if (!response.ok) {
+        // Try to get error details from response
+        let errorDetails = response.statusText
+        try {
+          const errorData = await response.json()
+          errorDetails = errorData.message || errorData.error || response.statusText
+        } catch {
+          // If response isn't JSON, use statusText
+        }
+        throw new Error(`Erreur ${response.status} (Bad Request): ${errorDetails} - Paramètres de requête invalides`)
+      }
+      
+      const data = await response.json()
+      setState((s) => ({ ...s, loading: false, users: data.users || [] }))
+    } catch (e) {
+      setState((s) => ({ 
+        ...s, 
+        loading: false, 
+        error: e instanceof Error ? e.message : 'Erreur 400: Requête invalide',
+        users: []
+      }))
+    }
+  }, [])
+
   const sortedUsers = useMemo(() => {
     const arr = [...state.users]
     arr.sort((a, b) => {
@@ -149,6 +205,8 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
     setSort,
     setPage,
     refetch: fetchList,
+    fetchWithError,
+    fetchWith400Error,
   } satisfies State & Api
 }
 
