@@ -1,19 +1,20 @@
 
 import { useRef } from 'react';
 import LaserFlow from '../laser';
+import { useTheme } from '@/providers/ThemeProvider';
 // NOTE: You can also adjust the variables in the shader for super detailed customization
 
 // Basic Usage
 export default function LaserBg({ children }: { children: React.ReactNode }) {
   const revealImgRef = useRef<HTMLImageElement | null>(null);
-
+  const { theme } = useTheme()
   return (
     <div 
       style={{ 
         height: '100vh', 
         position: 'relative', 
         overflow: 'hidden',
-        backgroundColor: '#060010'
+        backgroundColor: theme === 'dark' ? '#060010' : '#f5ffff'
       }}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -36,17 +37,16 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
       <LaserFlow
         horizontalBeamOffset={0.1}
         verticalBeamOffset={0.3}
-        color="#FF79C6"
+        color={theme === 'dark' ? '#FF79C6' : '#FFCBD2'}
       />
       
-      <div style={{
+      <div className="dark:bg-[#060010] bg-neutral-50" style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
         width: '86%',
         height: '60%',
-        backgroundColor: '#060010',
         borderRadius: '20px',
         border: '2px solid #FF79C6',
         display: 'flex',

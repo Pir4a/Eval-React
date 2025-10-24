@@ -6,10 +6,11 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './providers/ThemeProvider'
 import { ErrorBoundary } from './providers/ErrorBoundary'
 
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <ThemeProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <BrowserRouter>
           <App />
         </BrowserRouter>

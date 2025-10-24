@@ -109,31 +109,13 @@ export default function UserList() {
   }
 
   return (
-    <AnimatedContent distance={50}
-
-    direction="vertical"
-  
-    reverse={false}
-  
-    duration={1.2}
-  
-    ease="easeInOut"
-  
-    initialOpacity={0.2}
-  
-    animateOpacity={true}
-  
-    scale={1.1}
-  
-    threshold={0.1}
-  
-    delay={0.1}>
+    
     <div className="mx-auto w-[86%] max-w-6xl px-6 py-6">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center text-neutral-700 dark:text-neutral-400 sm:justify-between">
         <SearchBar value={search} onChange={setSearch} />
         <div className="flex items-center gap-3">
           <button
-            className={`rounded-md cursor-pointer hover:scale-105 border px-3 py-2 text-sm transition ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-neutral-300 dark:border-neutral-700'}`}
+            className={`rounded-md text-neutral-700 dark:text-neutral-400 cursor-pointer hover:scale-105 border px-3 py-2 text-sm transition ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-neutral-300 dark:border-neutral-700'}`}
             onClick={handleToggleFav}
           >
             {showFav ? 'Afficher tous' : 'Afficher favoris'}
@@ -172,7 +154,25 @@ export default function UserList() {
           ))}
         </div>
       ) : null}
+<AnimatedContent distance={50}
 
+direction="vertical"
+
+reverse={false}
+
+duration={1.2}
+
+ease="easeInOut"
+
+initialOpacity={0.2}
+
+animateOpacity={true}
+
+scale={1.1}
+
+threshold={0.1}
+
+delay={0.1}>
       <div
         ref={gridRef}
         className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-300 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
@@ -181,11 +181,11 @@ export default function UserList() {
           <UserCard key={u.id} user={u} onNavigate={() => setNavigating(true)} />
         ))}
       </div>
-
+      </AnimatedContent>
       {/* Pagination */}
       <div className="mt-6 flex items-center justify-between text-sm">
         <button
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
+          className="rounded-md border text-neutral-700 dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
           onClick={handlePrev}
           disabled={page === 1}
         >
@@ -202,8 +202,8 @@ export default function UserList() {
                 onClick={() => handleGotoPage(p)}
                 className={`min-w-8 px-2 py-1 rounded-md border text-sm transition ${
                   p === page
-                    ? 'border-neutral-400 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800'
-                    : 'border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                    ? 'border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800'
+                    : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                 }`}
               >
                 {p}
@@ -213,7 +213,7 @@ export default function UserList() {
         </div>
 
         <button
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
+          className="rounded-md border text-neutral-700 dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
           onClick={handleNext}
           disabled={page >= pageCount}
         >
@@ -221,7 +221,7 @@ export default function UserList() {
         </button>
       </div>
     </div>
-    </AnimatedContent>
+    
 
   )
 }
