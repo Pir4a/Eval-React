@@ -3,6 +3,7 @@ import { Spinner } from '../../../shared/atoms/Spinner'
 import { ErrorMessage } from '../../../shared/molecules/ErrorMessage'
 import { useUser } from '../hooks/useUsers'
 import { InfoCard } from '../../../shared/organisms/InfoCard'
+import AnimatedContent from '@/shared/animate'
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>()
@@ -10,7 +11,7 @@ export default function UserDetail() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-6 flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="mx-auto max-w-full px-4 py-6 flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
         <Spinner /> Chargement...
       </div>
     )
@@ -19,6 +20,15 @@ export default function UserDetail() {
   if (!user) return null
 
   return (
+    <AnimatedContent
+      distance={50}
+      direction="vertical"
+      reverse={false}
+      duration={1.2}
+      ease="easeInOut"
+      initialOpacity={0.2}
+      animateOpacity={true}
+    > 
     <div className="mx-auto max-w-3xl px-4 py-6">
       <div className="flex items-start gap-4">
         <img
@@ -98,6 +108,7 @@ export default function UserDetail() {
         />
       </div>
     </div>
+    </AnimatedContent>
   )
 }
 

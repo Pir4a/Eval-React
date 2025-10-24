@@ -24,7 +24,7 @@ export function FavoritesToggle({ userId }: { userId: number }) {
       onClick={onToggle}
       aria-pressed={fav}
       title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-      className="p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
+      className="p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition hover:scale-105 cursor-pointer z-10"
     >
       {fav ? (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5 text-yellow-500">

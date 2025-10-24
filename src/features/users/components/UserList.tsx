@@ -16,6 +16,7 @@ export default function UserList() {
   const [initialLoading, setInitialLoading] = useState(true)
   const gridRef = useRef<HTMLDivElement>(null)
   const [pendingDir, setPendingDir] = useState<null | 'next' | 'prev' | 'filter'>(null)
+  const [navigating, setNavigating] = useState(false)
 
   useEffect(() => {
     const update = () => setFavoriteIds(loadFavoriteIds())
@@ -132,7 +133,7 @@ export default function UserList() {
         <SearchBar value={search} onChange={setSearch} />
         <div className="flex items-center gap-3">
           <button
-            className={`rounded-md border px-3 py-2 text-sm transition ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-neutral-300 dark:border-neutral-700'}`}
+            className={`rounded-md cursor-pointer hover:scale-105 border px-3 py-2 text-sm transition ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-neutral-300 dark:border-neutral-700'}`}
             onClick={handleToggleFav}
           >
             {showFav ? 'Afficher tous' : 'Afficher favoris'}
@@ -157,12 +158,27 @@ export default function UserList() {
       ) : null}
       {error && <ErrorMessage message={error} onRetry={refetch} className="mb-4" />}
 
+      {navigating ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: pageSize }).map((_, i) => (
+            <div key={i} className="group flex items-center gap-4 rounded-xl border border-pink-400/40 bg-[#060010] p-4">
+              <div className="h-12 w-12 rounded-full bg-pink-400/30 animate-pulse" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-4 w-1/2 bg-pink-400/30 animate-pulse rounded" />
+                <div className="h-3 w-2/3 bg-pink-400/20 animate-pulse rounded" />
+              </div>
+              <div className="h-6 w-6 bg-pink-400/30 animate-pulse rounded" />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <div
         ref={gridRef}
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-300 ${initialLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-300 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         {visibleUsers.map((u) => (
-          <UserCard key={u.id} user={u} />
+          <UserCard key={u.id} user={u} onNavigate={() => setNavigating(true)} />
         ))}
       </div>
 
