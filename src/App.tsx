@@ -7,6 +7,7 @@ import UserPage from './pages/UserPage'
 import NotFound from './pages/NotFound'
 import ErrorTest from './pages/ErrorTest'
 import { Navbar } from './shared/organisms/Navbar'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <Toaster position="bottom-right" />
     </div>
   )
 }

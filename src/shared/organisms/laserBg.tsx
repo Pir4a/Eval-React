@@ -37,7 +37,7 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
       <LaserFlow
         horizontalBeamOffset={0.1}
         verticalBeamOffset={0.3}
-        color={theme === 'dark' ? '#FF79C6' : '#FFCBD2'}
+        color={theme === 'dark' ? '#FF79C6' : '#F8F8F5'}
       />
       
       <div className="dark:bg-[#060010] bg-neutral-50" style={{
@@ -48,7 +48,7 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
         width: '86%',
         height: '60%',
         borderRadius: '20px',
-        border: '2px solid #FF79C6',
+        border: `2px solid ${theme === 'dark' ? '#FF79C6' : '#2F5F5F'}`,
         display: 'flex',
         alignItems: 'stretch',
         justifyContent: 'stretch',

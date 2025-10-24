@@ -3,9 +3,27 @@ import { Spinner } from '../shared/atoms/Spinner'
 import { useUsers } from '../features/users/hooks/useUsers'
 import { UserCard } from '../features/users/components/UserCard'
 import { Link } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import toast from 'react-hot-toast'
 
 export default function ErrorTest() {
   const { users, loading, error, refetch, fetchWith400Error, total } = useUsers({ pageSize: 5 })
+  const hasNotifiedSuccessRef = useRef(false)
+
+  // Notify on error
+  useEffect(() => {
+    if (error) {
+      toast.error(error.includes('400') ? 'Requête invalide (400)' : error.includes('404') ? 'Ressource introuvable (404)' : "Erreur lors du chargement des utilisateurs")
+    }
+  }, [error])
+
+  // Notify on first successful load
+  useEffect(() => {
+    if (!loading && !error && users.length > 0 && !hasNotifiedSuccessRef.current) {
+      hasNotifiedSuccessRef.current = true
+      toast.success('Utilisateurs chargés avec succès')
+    }
+  }, [loading, error, users])
 
 
   const handleForceError400 = () => {
@@ -14,6 +32,7 @@ export default function ErrorTest() {
 
   const handleRetry = () => {
     refetch()
+    toast.loading('Rechargement...', { id: 'reload' })
   }
 
   return (

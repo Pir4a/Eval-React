@@ -10,7 +10,7 @@ export function Navbar() {
         <Link to="/" className="font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">UsersApp</Link>
         <nav className="flex items-center gap-4">
           <NavLink to="/" className={({ isActive }) => `text-sm ${isActive ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`}>
-            Liste
+            Users List
           </NavLink>
           <NavLink to="/error-test" className={({ isActive }) => `text-sm ${isActive ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`}>
             Test Fetch Error Page

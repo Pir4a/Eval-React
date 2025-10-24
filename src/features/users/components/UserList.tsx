@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { UserCard } from './UserCard'
 import { SearchBar } from './SearchBar'
 import { SortMenu } from './SortMenu'
@@ -8,6 +8,7 @@ import { useUsers } from '../hooks/useUsers'
 import { loadFavoriteIds } from '../../../utils/favorites'
 import AnimatedContent from '../../../shared/animate.tsx'
 import { gsap } from 'gsap'
+import toast from 'react-hot-toast'
 import type { User } from '../types/User'
 
 export default function UserList() {
@@ -35,32 +36,57 @@ export default function UserList() {
     }
   }, [loading, initialLoading])
 
- console.log(users)
- console.log(total)
- console.log(loading)
- console.log(error)
- console.log(search)
- console.log(sortKey)
- console.log(sortDir)
- console.log(page)
- console.log(pageSize)
+  // Toast on error and success
+  useEffect(() => {
+    if (error) {
+      toast.error("Erreur lors du chargement des utilisateurs")
+    }
+  }, [error])
+
+  useEffect(() => {
+    if (!loading && !error && users.length > 0) {
+      toast.dismiss('reload')
+    }
+  }, [loading, error, users])
 
   const pageCount = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize])
 
   // Get users for a specific page from cache or current
-  const getUsersForPage = (pageNum: number): User[] => {
+  const getUsersForPage = useCallback((pageNum: number): User[] => {
     if (pageNum === page) return users
     return pageCache[pageNum] || []
-  }
+  }, [page, users, pageCache])
 
   // Apply favorite filter to users
-  const filterUsers = (userList: User[]) => {
+  const filterUsers = useCallback((userList: User[]) => {
     return showFav ? userList.filter((u) => favoriteIds.includes(u.id)) : userList
-  }
+  }, [showFav, favoriteIds])
 
-  const visibleUsers = useMemo(() => filterUsers(users), [showFav, users, favoriteIds])
-  const prevPageUsers = useMemo(() => filterUsers(getUsersForPage(page - 1)), [page, pageCache, showFav, favoriteIds, getUsersForPage])
-  const nextPageUsers = useMemo(() => filterUsers(getUsersForPage(page + 1)), [page, pageCache, showFav, favoriteIds, getUsersForPage])
+  // Offline mode: favorites from cache fallback
+  const cachedFavUsers = useMemo(() => {
+    const lists = Object.values(pageCache) as User[][]
+    const merged: User[] = []
+    const seen = new Set<number>()
+    for (const arr of lists) {
+      for (const u of arr) {
+        if (!seen.has(u.id)) {
+          seen.add(u.id)
+          if (favoriteIds.includes(u.id)) merged.push(u)
+        }
+      }
+    }
+    return merged
+  }, [pageCache, favoriteIds])
+
+  useEffect(() => {
+    if (error && cachedFavUsers.length > 0) {
+      toast('Mode hors ligne: favoris affichés', { icon: '📴' })
+    }
+  }, [error, cachedFavUsers.length])
+
+  const visibleUsers = useMemo(() => filterUsers(users), [filterUsers, users])
+  const prevPageUsers = useMemo(() => filterUsers(getUsersForPage(page - 1)), [filterUsers, getUsersForPage, page])
+  const nextPageUsers = useMemo(() => filterUsers(getUsersForPage(page + 1)), [filterUsers, getUsersForPage, page])
 
   const slideToPage = (direction: 'next' | 'prev') => {
     if (!carouselRef.current || isAnimating) return
@@ -164,10 +190,24 @@ export default function UserList() {
           ))}
         </div>
       ) : null}
-      {error && <ErrorMessage message={error} onRetry={refetch} className="mb-4" />}
+      {error && cachedFavUsers.length === 0 && <ErrorMessage message={error} onRetry={refetch} className="mb-4" />}
+
+      {error && cachedFavUsers.length > 0 && (
+        <div className="mb-6 space-y-3">
+          <div className="rounded-lg border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-4 text-blue-900 dark:text-blue-200">
+            <p className="text-sm">Mode hors ligne détecté. Affichage des favoris en cache.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cachedFavUsers.map((u) => (
+              <UserCard key={`offline-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Carousel Container */}
-      <div className="relative overflow-hidden">
+      {(!error || cachedFavUsers.length === 0) && (
+      <div className="relative overflow-hidden ">
         <AnimatedContent 
           distance={50}
           direction="vertical"
@@ -222,7 +262,9 @@ export default function UserList() {
           </div>
         </AnimatedContent>
       </div>
+      )}
       {/* Pagination */}
+      {(!error || cachedFavUsers.length === 0) && (
       <div className="mt-6 flex items-center justify-between text-sm">
         <button
           className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5 disabled:opacity-50 hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-sm transition-all disabled:hover:border-neutral-300 disabled:hover:shadow-none"
@@ -261,6 +303,7 @@ export default function UserList() {
           Suivant
         </button>
       </div>
+      )}
     </div>
     
 
