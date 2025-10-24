@@ -10,25 +10,29 @@ Niveau 1 – Base dynamique et structurée (10/20)
 Créer une application dynamique et lisible affichant la liste des utilisateurs et le détail d’un
 utilisateur au clic.
 Attendus
-• Afficher la liste des utilisateurs chargée depuis l’API. Utiliser useState et useEffect.
-• Afficher les données principales : photo, prénom, nom, email.
-• Clic sur un utilisateur → afficher ses détails : âge, société, ville, etc.
-• Créer au moins 3 composants :
-• <UserList />, <UserCard />, <UserDetail />.
-• Navigation entre la liste et la fiche de détail via React Router :
-• / → liste
-• /user/:id → fiche de détail
-• Gérer un état de chargement (Loading…) et une erreur réseau.
+X Afficher la liste des utilisateurs chargée depuis l’API. Utiliser useState et useEffect.
+X Afficher les données principales : photo, prénom, nom, email.
+XClic sur un utilisateur → afficher ses détails : âge, société, ville, etc.
+X Créer au moins 3 composants :
+X <UserList />, <UserCard />, <UserDetail />.
+X Navigation entre la liste et la fiche de détail via React Router :
+X / → liste
+X /user/:id → fiche de détail
+X Gérer un état de chargement (Loading…) et une erreur réseau.
 Niveau 2 – Interactivité et navigation (13/20)
 Améliorer l’interaction et structurer l’application.
 Attendus
-• Conserver les fonctionnalités du niveau 1.
+ Conserver les fonctionnalités du niveau 1.
 • Ajouter :
-• Un champ de recherche (nom, prénom, email) en temps réel.
-• Un tri par nom ou par âge.
-• Une pagination (10 utilisateurs par page).
-• Gestion propre des erreurs via try/catch.
+X Un champ de recherche (nom, prénom, email) en temps réel.
+X Un tri par nom ou par âge.
+X Une pagination (10 utilisateurs par page).
+X Gestion propre des erreurs via try/catch.
 Niveau 3 – Application complète et UX évoluée (15/20)
+---------------------
+[] FIX UI 
+----------------------
+
 Offrir une expérience utilisateur fluide et bien structurée.
 Attendus
 • Reprendre les fonctionnalités précédentes.

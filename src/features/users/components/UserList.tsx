@@ -1,12 +1,23 @@
+import { useEffect, useState } from 'react'
 import { UserCard } from './UserCard'
 import { SearchBar } from './SearchBar'
 import { SortMenu } from './SortMenu'
 import { Spinner } from '../../../shared/atoms/Spinner'
 import { ErrorMessage } from '../../../shared/molecules/ErrorMessage'
 import { useUsers } from '../hooks/useUsers'
+import { loadFavoriteIds } from '../../../utils/favorites'
 
 export default function UserList() {
   const { users, total, loading, error, search, sortKey, sortDir, page, pageSize, setSearch, setSort, setPage, refetch } = useUsers()
+  const [showFav, setShowFav] = useState(false)
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([])
+
+  useEffect(() => {
+    const update = () => setFavoriteIds(loadFavoriteIds())
+    update()
+    window.addEventListener('favorites:changed', update as EventListener)
+    return () => window.removeEventListener('favorites:changed', update as EventListener)
+  }, [])
 
  console.log(users)
  console.log(total)
@@ -22,7 +33,15 @@ export default function UserList() {
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SearchBar value={search} onChange={setSearch} />
-        <SortMenu sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+        <div className="flex items-center gap-3">
+          <button
+            className={`rounded-md border px-3 py-2 text-sm transition ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-neutral-300 dark:border-neutral-700'}`}
+            onClick={() => setShowFav((v) => !v)}
+          >
+            {showFav ? 'Afficher tous' : 'Afficher favoris'}
+          </button>
+          <SortMenu sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+        </div>
       </div>
 
       {loading && (
@@ -33,7 +52,7 @@ export default function UserList() {
       {error && <ErrorMessage message={error} onRetry={refetch} className="mb-4" />}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {users.map((u) => (
+        {(showFav ? users.filter((u) => favoriteIds.includes(u.id)) : users).map((u) => (
           <UserCard key={u.id} user={u} />
         ))}
       </div>

@@ -34,7 +34,7 @@ export default function UserDetail() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InfoCard
           title="Informations"
           items={[
