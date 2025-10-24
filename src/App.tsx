@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import UserPage from './pages/UserPage'
 import NotFound from './pages/NotFound'
-import { Navbar } from './components/Navbar'
+import { Navbar } from './shared/organisms/Navbar'
 
 function App() {
   return (

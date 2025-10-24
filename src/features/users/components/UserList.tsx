@@ -1,8 +1,8 @@
 import { UserCard } from './UserCard'
 import { SearchBar } from './SearchBar'
 import { SortMenu } from './SortMenu'
-import { Spinner } from '../../../components/ui/Spinner'
-import { ErrorMessage } from '../../../components/ui/ErrorMessage'
+import { Spinner } from '../../../shared/atoms/Spinner'
+import { ErrorMessage } from '../../../shared/molecules/ErrorMessage'
 import { useUsers } from '../hooks/useUsers'
 
 export default function UserList() {

@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
-import { useTheme } from '../providers/ThemeProvider'
-import { Toggle } from './ui/Toggle'
+import { useTheme } from '../../providers/ThemeProvider'
+import { Toggle } from '../molecules/Toggle'
 
 export function Navbar() {
   const { theme, toggleTheme } = useTheme()

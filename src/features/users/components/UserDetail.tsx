@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
-import { Spinner } from '../../../components/ui/Spinner'
-import { ErrorMessage } from '../../../components/ui/ErrorMessage'
+import { Spinner } from '../../../shared/atoms/Spinner'
+import { ErrorMessage } from '../../../shared/molecules/ErrorMessage'
 import { useUser } from '../hooks/useUsers'
 import { InfoCard } from '../../../shared/organisms/InfoCard'
 

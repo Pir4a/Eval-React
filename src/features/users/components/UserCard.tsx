@@ -10,7 +10,6 @@ function UserCardBase({ user }: Props) {
       to={`/user/${user.id}`}
       className="group flex items-center gap-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 hover:shadow-sm transition"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={user.image || `https://api.dicebear.com/9.x/initials/svg?seed=${user.firstName}+${user.lastName}`}
         alt={`${user.firstName} ${user.lastName}`}
