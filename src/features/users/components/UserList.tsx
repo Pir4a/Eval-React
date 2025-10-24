@@ -8,15 +8,16 @@ import { useUsers } from '../hooks/useUsers'
 import { loadFavoriteIds } from '../../../utils/favorites'
 import AnimatedContent from '../../../shared/animate.tsx'
 import { gsap } from 'gsap'
+import type { User } from '../types/User'
 
 export default function UserList() {
-  const { users, total, loading, error, search, sortKey, sortDir, page, pageSize, setSearch, setSort, setPage, refetch } = useUsers()
+  const { users, total, loading, error, search, sortKey, sortDir, page, pageSize, pageCache, setSearch, setSort, setPage, refetch } = useUsers()
   const [showFav, setShowFav] = useState(false)
   const [favoriteIds, setFavoriteIds] = useState<number[]>([])
   const [initialLoading, setInitialLoading] = useState(true)
-  const gridRef = useRef<HTMLDivElement>(null)
-  const [pendingDir, setPendingDir] = useState<null | 'next' | 'prev' | 'filter'>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
   const [navigating, setNavigating] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
     const update = () => setFavoriteIds(loadFavoriteIds())
@@ -44,68 +45,92 @@ export default function UserList() {
  console.log(page)
  console.log(pageSize)
 
-  const visibleUsers = useMemo(() => {
-    return showFav ? users.filter((u) => favoriteIds.includes(u.id)) : users
-  }, [showFav, users, favoriteIds])
-
   const pageCount = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize])
 
-  const animateOut = (dir: 'next' | 'prev' | 'filter') =>
-    new Promise<void>((resolve) => {
-      if (!gridRef.current) return resolve()
-      const opts =
-        dir === 'filter'
-          ? { x: 0, y: 12, opacity: 0, duration: 0.25, ease: 'power2.in' as const }
-          : { x: dir === 'next' ? -50 : 50, y: 0, opacity: 0, duration: 0.35, ease: 'power2.in' as const }
-      gsap.to(gridRef.current, { ...opts, onComplete: resolve })
+  // Get users for a specific page from cache or current
+  const getUsersForPage = (pageNum: number): User[] => {
+    if (pageNum === page) return users
+    return pageCache[pageNum] || []
+  }
+
+  // Apply favorite filter to users
+  const filterUsers = (userList: User[]) => {
+    return showFav ? userList.filter((u) => favoriteIds.includes(u.id)) : userList
+  }
+
+  const visibleUsers = useMemo(() => filterUsers(users), [showFav, users, favoriteIds])
+  const prevPageUsers = useMemo(() => filterUsers(getUsersForPage(page - 1)), [page, pageCache, showFav, favoriteIds, getUsersForPage])
+  const nextPageUsers = useMemo(() => filterUsers(getUsersForPage(page + 1)), [page, pageCache, showFav, favoriteIds, getUsersForPage])
+
+  const slideToPage = (direction: 'next' | 'prev') => {
+    if (!carouselRef.current || isAnimating) return
+    
+    setIsAnimating(true)
+    // From center (-33.33%) go to right panel (-66.66%) or left panel (0%)
+    const targetPercent = direction === 'next' ? -66.66 : 0
+    
+    gsap.to(carouselRef.current, {
+      xPercent: targetPercent,
+      duration: 0.6,
+      ease: 'power3.inOut',
+      onComplete: () => {
+        // Reset to center position after page change
+        gsap.set(carouselRef.current, { xPercent: -33.33 })
+        setPage(direction === 'next' ? page + 1 : page - 1)
+        setIsAnimating(false)
+      }
     })
+  }
 
-  const animateIn = (dir: 'next' | 'prev' | 'filter') => {
-    if (!gridRef.current) return
-    if (dir === 'filter') {
-      gsap.set(gridRef.current, { x: 0, y: -12, opacity: 0 })
-      gsap.to(gridRef.current, { x: 0, y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' })
-    } else {
-      gsap.set(gridRef.current, { x: dir === 'next' ? 50 : -50, opacity: 0 })
-      gsap.to(gridRef.current, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.out' })
+  // Initialize carousel to show center panel (current page)
+  useEffect(() => {
+    if (carouselRef.current) {
+      gsap.set(carouselRef.current, { xPercent: -33.33 })
     }
+  }, [])
+
+  const handleNext = () => {
+    if (loading || isAnimating || page >= pageCount) return
+    slideToPage('next')
   }
 
-  const handleNext = async () => {
-    if (loading) return
-    setPendingDir('next')
-    await animateOut('next')
-    setPage(page + 1)
+  const handlePrev = () => {
+    if (loading || isAnimating || page === 1) return
+    slideToPage('prev')
   }
 
-  const handlePrev = async () => {
-    if (loading || page === 1) return
-    setPendingDir('prev')
-    await animateOut('prev')
-    setPage(page - 1)
-  }
-
-  const handleToggleFav = async () => {
-    if (loading) return
-    setPendingDir('filter')
-    await animateOut('filter')
+  const handleToggleFav = () => {
+    if (isAnimating) return
     setShowFav((v) => !v)
     setPage(1)
   }
 
-  useEffect(() => {
-    if (pendingDir && !loading) {
-      animateIn(pendingDir)
-      setPendingDir(null)
-    }
-  }, [users, loading, pendingDir])
-
-  const handleGotoPage = async (target: number) => {
-    if (loading || target === page || target < 1 || target > pageCount) return
-    const dir = target > page ? 'next' : 'prev'
-    setPendingDir(dir)
-    await animateOut(dir)
-    setPage(target)
+  const handleGotoPage = (target: number) => {
+    if (loading || isAnimating || target === page || target < 1 || target > pageCount) return
+    
+    // Calculate how many pages we're jumping
+    const distance = Math.abs(target - page)
+    const direction = target > page ? 'next' : 'prev'
+    
+    if (!carouselRef.current) return
+    
+    setIsAnimating(true)
+    
+    // For multi-page jumps, use a faster animation
+    const duration = distance > 1 ? 0.4 : 0.6
+    const targetPercent = direction === 'next' ? -66.66 : 0
+    
+    gsap.to(carouselRef.current, {
+      xPercent: targetPercent,
+      duration,
+      ease: 'power3.inOut',
+      onComplete: () => {
+        // Reset to center position after page change
+        gsap.set(carouselRef.current, { xPercent: -33.33 })
+        setPage(target)
+        setIsAnimating(false)
+      }
+    })
   }
 
   return (
@@ -115,8 +140,9 @@ export default function UserList() {
         <SearchBar value={search} onChange={setSearch} />
         <div className="flex items-center gap-3">
           <button
-            className={`rounded-md text-neutral-700 dark:text-neutral-400 cursor-pointer hover:scale-105 border px-3 py-2 text-sm transition ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-neutral-300 dark:border-neutral-700'}`}
+            className={`rounded-md text-neutral-700 dark:text-neutral-400 cursor-pointer hover:scale-105 border px-3 py-2 text-sm transition-all ${showFav ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 shadow-sm' : 'border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-sm'}`}
             onClick={handleToggleFav}
+            disabled={isAnimating}
           >
             {showFav ? 'Afficher tous' : 'Afficher favoris'}
           </button>
@@ -140,54 +166,68 @@ export default function UserList() {
       ) : null}
       {error && <ErrorMessage message={error} onRetry={refetch} className="mb-4" />}
 
-      {navigating ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: pageSize }).map((_, i) => (
-            <div key={i} className="group flex items-center gap-4 rounded-xl border border-pink-400/40 bg-[#060010] p-4">
-              <div className="h-12 w-12 rounded-full bg-pink-400/30 animate-pulse" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="h-4 w-1/2 bg-pink-400/30 animate-pulse rounded" />
-                <div className="h-3 w-2/3 bg-pink-400/20 animate-pulse rounded" />
+      {/* Carousel Container */}
+      <div className="relative overflow-hidden">
+        <AnimatedContent 
+          distance={50}
+          direction="vertical"
+          reverse={false}
+          duration={1.2}
+          ease="easeInOut"
+          initialOpacity={0.2}
+          animateOpacity={true}
+          scale={1.1}
+          threshold={0.1}
+          delay={0.1}
+        >
+          <div 
+            ref={carouselRef}
+            className="flex will-change-transform"
+            style={{ width: '300%' }}
+          >
+            {/* Previous Page */}
+            <div className="w-1/3 shrink-0 px-1">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                {page > 1 && prevPageUsers.length > 0 ? (
+                  prevPageUsers.map((u) => (
+                    <UserCard key={`prev-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />
+                  ))
+                ) : (
+                  <div className="col-span-full h-20" />
+                )}
               </div>
-              <div className="h-6 w-6 bg-pink-400/30 animate-pulse rounded" />
             </div>
-          ))}
-        </div>
-      ) : null}
-<AnimatedContent distance={50}
 
-direction="vertical"
+            {/* Current Page */}
+            <div className="w-1/3 shrink-0 px-1">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                {visibleUsers.map((u) => (
+                  <UserCard key={`current-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />
+                ))}
+              </div>
+            </div>
 
-reverse={false}
-
-duration={1.2}
-
-ease="easeInOut"
-
-initialOpacity={0.2}
-
-animateOpacity={true}
-
-scale={1.1}
-
-threshold={0.1}
-
-delay={0.1}>
-      <div
-        ref={gridRef}
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-300 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-      >
-        {visibleUsers.map((u) => (
-          <UserCard key={u.id} user={u} onNavigate={() => setNavigating(true)} />
-        ))}
+            {/* Next Page */}
+            <div className="w-1/3 shrink-0 px-1">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                {page < pageCount && nextPageUsers.length > 0 ? (
+                  nextPageUsers.map((u) => (
+                    <UserCard key={`next-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />
+                  ))
+                ) : (
+                  <div className="col-span-full h-20" />
+                )}
+              </div>
+            </div>
+          </div>
+        </AnimatedContent>
       </div>
-      </AnimatedContent>
       {/* Pagination */}
       <div className="mt-6 flex items-center justify-between text-sm">
         <button
-          className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
+          className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5 disabled:opacity-50 hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-sm transition-all disabled:hover:border-neutral-300 disabled:hover:shadow-none"
           onClick={handlePrev}
-          disabled={page === 1}
+          disabled={page === 1 || isAnimating}
         >
           Précédent
         </button>
@@ -200,10 +240,11 @@ delay={0.1}>
               <button
                 key={p}
                 onClick={() => handleGotoPage(p)}
-                className={`min-w-8 px-2 py-1 rounded-md border text-sm transition cursor-pointer ${
+                disabled={isAnimating}
+                className={`min-w-8 px-2 py-1 rounded-md border text-sm transition-all cursor-pointer ${
                   p === page
                     ? 'border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800'
-                    : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                    : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50'
                 }`}
               >
                 {p}
@@ -213,9 +254,9 @@ delay={0.1}>
         </div>
 
         <button
-          className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
+          className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5 disabled:opacity-50 hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-sm transition-all disabled:hover:border-neutral-300 disabled:hover:shadow-none"
           onClick={handleNext}
-          disabled={page >= pageCount}
+          disabled={page >= pageCount || isAnimating}
         >
           Suivant
         </button>
