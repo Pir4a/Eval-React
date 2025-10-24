@@ -14,7 +14,7 @@ export function Navbar() {
           </NavLink>
         </nav>
         <div className="flex items-center gap-3">
-          <Toggle checked={theme === 'dark'} onChange={toggleTheme} label="Dark" />
+          <Toggle checked={theme === 'dark'} onChange={() => {toggleTheme(); console.log(theme)}} label="Dark" />
         </div>
       </div>
     </header>

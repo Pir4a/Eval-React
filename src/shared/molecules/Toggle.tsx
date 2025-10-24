@@ -15,7 +15,8 @@ export function Toggle({ checked, onChange, label }: Props) {
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') onChange(!checked)
         }}
-        onClick={() => onChange(!checked)}
+        onClick={() => {onChange(!checked); console.log(checked)}}
+        
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
           checked ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-neutral-300 dark:bg-neutral-700'
         }`}
