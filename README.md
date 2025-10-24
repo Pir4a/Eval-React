@@ -233,7 +233,7 @@ Fonctionnalités utilisées :
 
 ## 🚀 Améliorations futures possibles
 
-- [X] Déploiement sur Vercel
+- [X] Déploiement sur Vercel : https://eval-react-ashy.vercel.app/
 
 ## 👨‍💻 Développeur
 
