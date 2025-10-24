@@ -5,7 +5,7 @@ import { Toggle } from '../molecules/Toggle'
 export function Navbar() {
   const { theme, toggleTheme } = useTheme()
   return (
-    <header className="sticky top-0 z-10 border-b border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70 backdrop-blur">
+    <header className="sticky top-2 z-10 border-b border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70 backdrop-blur w-[95%] mx-auto rounded-lg">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
         <Link to="/" className="font-semibold tracking-tight">UsersApp</Link>
         <nav className="flex items-center gap-4">
