@@ -12,13 +12,15 @@ import toast from 'react-hot-toast'
 import type { User } from '../types/User'
 
 export default function UserList() {
-  const { users, total, loading, error, search, sortKey, sortDir, page, pageSize, pageCache, setSearch, setSort, setPage, refetch } = useUsers()
+  const { users, total, loading, error, search, sortKey, sortDir, page, pageSize, pageCache, setSearch, setSort, setPage, refetch, prefetchPages } = useUsers()
   const [showFav, setShowFav] = useState(false)
   const [favoriteIds, setFavoriteIds] = useState<number[]>([])
   const [initialLoading, setInitialLoading] = useState(true)
   const carouselRef = useRef<HTMLDivElement>(null)
   const [navigating, setNavigating] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [animPages, setAnimPages] = useState<{ prev: User[]; current: User[]; next: User[] } | null>(null)
+  const [carouselKey, setCarouselKey] = useState(0)
 
   useEffect(() => {
     const update = () => setFavoriteIds(loadFavoriteIds())
@@ -53,9 +55,8 @@ export default function UserList() {
 
   // Get users for a specific page from cache or current
   const getUsersForPage = useCallback((pageNum: number): User[] => {
-    if (pageNum === page) return users
     return pageCache[pageNum] || []
-  }, [page, users, pageCache])
+  }, [pageCache])
 
   // Apply favorite filter to users
   const filterUsers = useCallback((userList: User[]) => {
@@ -84,13 +85,24 @@ export default function UserList() {
     }
   }, [error, cachedFavUsers.length])
 
-  const visibleUsers = useMemo(() => filterUsers(users), [filterUsers, users])
-  const prevPageUsers = useMemo(() => filterUsers(getUsersForPage(page - 1)), [filterUsers, getUsersForPage, page])
-  const nextPageUsers = useMemo(() => filterUsers(getUsersForPage(page + 1)), [filterUsers, getUsersForPage, page])
+  const basePrev = isAnimating && animPages ? animPages.prev : getUsersForPage(page - 1)
+  const baseCurrent = isAnimating && animPages ? animPages.current : getUsersForPage(page)
+  const baseNext = isAnimating && animPages ? animPages.next : getUsersForPage(page + 1)
+
+  const visibleUsers = useMemo(() => filterUsers(baseCurrent), [filterUsers, baseCurrent])
+  const prevPageUsers = useMemo(() => filterUsers(basePrev), [filterUsers, basePrev])
+  const nextPageUsers = useMemo(() => filterUsers(baseNext), [filterUsers, baseNext])
 
   const slideToPage = (direction: 'next' | 'prev') => {
     if (!carouselRef.current || isAnimating) return
     
+    // Snapshot current cached pages to keep DOM stable during animation
+    setAnimPages({
+      prev: getUsersForPage(page - 1),
+      current: getUsersForPage(page),
+      next: getUsersForPage(page + 1),
+    })
+
     setIsAnimating(true)
     // From center (-33.33%) go to right panel (-66.66%) or left panel (0%)
     const targetPercent = direction === 'next' ? -66.66 : 0
@@ -103,7 +115,12 @@ export default function UserList() {
         // Reset to center position after page change
         gsap.set(carouselRef.current, { xPercent: -33.33 })
         setPage(direction === 'next' ? page + 1 : page - 1)
-        setIsAnimating(false)
+        // Clear snapshot on next frame to avoid paint-jank
+        requestAnimationFrame(() => {
+          setAnimPages(null)
+          setCarouselKey(k => k + 1)
+          setIsAnimating(false)
+        })
       }
     })
   }
@@ -117,11 +134,20 @@ export default function UserList() {
 
   const handleNext = () => {
     if (loading || isAnimating || page >= pageCount) return
+    // Prefetch the next page if it's not in cache yet
+    const next = page + 1
+    if (!pageCache[next]) {
+      prefetchPages([next])
+    }
     slideToPage('next')
   }
 
   const handlePrev = () => {
     if (loading || isAnimating || page === 1) return
+    const prev = page - 1
+    if (!pageCache[prev]) {
+      prefetchPages([prev])
+    }
     slideToPage('prev')
   }
 
@@ -140,6 +166,10 @@ export default function UserList() {
     
     if (!carouselRef.current) return
     
+    // If jumping to a page not yet cached, prefetch before animating
+    if (!pageCache[target]) {
+      prefetchPages([target])
+    }
     setIsAnimating(true)
     
     // For multi-page jumps, use a faster animation
@@ -221,13 +251,14 @@ export default function UserList() {
           delay={0.1}
         >
           <div 
+            key={carouselKey}
             ref={carouselRef}
             className="flex will-change-transform"
             style={{ width: '300%' }}
           >
             {/* Previous Page */}
-            <div className="w-1/3 shrink-0 px-1">
-              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className="w-1/3 shrink-0 px-1 max-h-96">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {page > 1 && prevPageUsers.length > 0 ? (
                   prevPageUsers.map((u) => (
                     <UserCard key={`prev-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />
@@ -239,8 +270,8 @@ export default function UserList() {
             </div>
 
             {/* Current Page */}
-            <div className="w-1/3 shrink-0 px-1">
-              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className="w-1/3 shrink-0 px-1 max-h-96">
+              <div className={`grid grid-cols-1 sm:grid-cols-2  gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {visibleUsers.map((u) => (
                   <UserCard key={`current-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />
                 ))}
@@ -248,8 +279,8 @@ export default function UserList() {
             </div>
 
             {/* Next Page */}
-            <div className="w-1/3 shrink-0 px-1">
-              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className="w-1/3 shrink-0 px-1 max-h-96">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${initialLoading || navigating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {page < pageCount && nextPageUsers.length > 0 ? (
                   nextPageUsers.map((u) => (
                     <UserCard key={`next-${u.id}`} user={u} onNavigate={() => setNavigating(true)} />

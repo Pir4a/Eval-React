@@ -57,14 +57,14 @@ export default function ErrorTest() {
             <button
               onClick={handleForceError400}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-md bg-orange-600 text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex  cursor-pointer items-center gap-2 rounded-md bg-orange-600 text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Erreur 400
             </button>
             <button
               onClick={refetch}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-md bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 px-4 py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 px-4 py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

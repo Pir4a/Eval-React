@@ -36,7 +36,7 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
     >
       <LaserFlow
         horizontalBeamOffset={0.1}
-        verticalBeamOffset={0.3}
+        verticalBeamOffset={0.32}
         color={theme === 'dark' ? '#FF79C6' : '#F8F8F5'}
       />
       
@@ -46,7 +46,7 @@ export default function LaserBg({ children }: { children: React.ReactNode }) {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         width: '86%',
-        height: '60%',
+        height: '65%',
         borderRadius: '20px',
         border: `2px solid ${theme === 'dark' ? '#FF79C6' : '#2F5F5F'}`,
         display: 'flex',

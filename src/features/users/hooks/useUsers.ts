@@ -25,6 +25,7 @@ type Api = {
   refetch: () => Promise<void>
   fetchWithError: () => Promise<void>
   fetchWith400Error: () => Promise<void>
+  prefetchPages: (pages: number[]) => Promise<void>
 }
 
 export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
@@ -92,6 +93,33 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
       setState((s) => ({ ...s, loading: false, error: e instanceof Error ? e.message : 'Erreur inconnue' }))
     }
   }, [state.page, state.pageSize, state.search, state.pageCache])
+
+  // Background prefetch without toggling loading or swapping current users
+  const prefetchPages = useCallback(async (pages: number[]) => {
+    const unique = Array.from(new Set(pages)).filter((p) => p > 0)
+    const missing = unique.filter((p) => !(p in state.pageCache))
+    if (missing.length === 0) return
+    try {
+      const requests = missing.map(async (p) => {
+        const skip = (p - 1) * state.pageSize
+        return state.search
+          ? searchUsers({ q: state.search, limit: state.pageSize, skip }).then((res) => ({ p, res }))
+          : fetchUsers({ limit: state.pageSize, skip }).then((res) => ({ p, res }))
+      })
+      const results = await Promise.all(requests)
+      setState((s) => {
+        const newCache = { ...s.pageCache }
+        let total = s.total
+        for (const { p, res } of results) {
+          newCache[p] = res.users
+          total = res.total
+        }
+        return { ...s, pageCache: newCache, total }
+      })
+    } catch {
+      // swallow prefetch errors; main fetch flow will surface errors
+    }
+  }, [state.pageCache, state.pageSize, state.search])
 
   useEffect(() => {
     fetchList()
@@ -207,6 +235,7 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
     refetch: fetchList,
     fetchWithError,
     fetchWith400Error,
+    prefetchPages,
   } satisfies State & Api
 }
 

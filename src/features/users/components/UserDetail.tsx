@@ -4,6 +4,7 @@ import { ErrorMessage } from '../../../shared/molecules/ErrorMessage'
 import { useUser } from '../hooks/useUsers'
 import { InfoCard } from '../../../shared/organisms/InfoCard'
 import AnimatedContent from '@/shared/animate'
+import NotFound from '../../../pages/NotFound'
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>()
@@ -16,7 +17,13 @@ export default function UserDetail() {
       </div>
     )
   }
-  if (error) return <div className="mx-auto max-w-3xl px-4 py-6"><ErrorMessage message={error} onRetry={refetch} /></div>
+  if (error) {
+    const msg = error.toLowerCase()
+    if (msg.includes('introuvable') || msg.includes('404')) {
+      return <NotFound />
+    }
+    return <div className="mx-auto max-w-3xl px-4 py-6"><ErrorMessage message={error} onRetry={refetch} /></div>
+  }
   if (!user) return null
 
   return (
