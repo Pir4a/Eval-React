@@ -53,10 +53,31 @@ export default function UserList() {
 
   const pageCount = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize])
 
+  // Sort users helper
+  const sortUsers = useCallback((userList: User[]): User[] => {
+    const arr = [...userList]
+    arr.sort((a, b) => {
+      let va: string | number = ''
+      let vb: string | number = ''
+      if (sortKey === 'name') {
+        va = `${a.firstName} ${a.lastName}`.toLowerCase()
+        vb = `${b.firstName} ${b.lastName}`.toLowerCase()
+      } else {
+        va = a.age ?? 0
+        vb = b.age ?? 0
+      }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+    return arr
+  }, [sortKey, sortDir])
+
   // Get users for a specific page from cache or current
   const getUsersForPage = useCallback((pageNum: number): User[] => {
-    return pageCache[pageNum] || []
-  }, [pageCache])
+    const cached = pageCache[pageNum] || []
+    return sortUsers(cached)
+  }, [pageCache, sortUsers])
 
   // Apply favorite filter to users
   const filterUsers = useCallback((userList: User[]) => {
