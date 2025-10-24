@@ -15,6 +15,7 @@ type State = {
   sortDir: SortDir
   page: number
   pageSize: number
+  pageCache: Record<number, User[]>
 }
 
 type Api = {
@@ -35,27 +36,67 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
     sortDir: 'asc',
     page: 1,
     pageSize: initial?.pageSize ?? 10,
+    pageCache: {},
   })
 
+  const PREFETCH_PAGES = 5
+
   const fetchList = useCallback(async () => {
-    setState((s) => ({ ...s, loading: true, error: null }))
+    // Prime UI from cache if available; only show loader if current page missing
+    setState((s) => ({
+      ...s,
+      users: s.pageCache[s.page] ?? s.users,
+      loading: !s.pageCache[s.page],
+      error: null,
+    }))
+
     try {
-      const skip = (state.page - 1) * state.pageSize
-      const data = state.search
-        ? await searchUsers({ q: state.search, limit: state.pageSize, skip })
-        : await fetchUsers({ limit: state.pageSize, skip })
-      setState((s) => ({ ...s, users: data.users, total: data.total, loading: false }))
+      // Determine pages to fetch (current and next few), skip already cached
+      const pagesToFetch = Array.from({ length: PREFETCH_PAGES }, (_, i) => state.page + i).filter(
+        (p) => !(p in state.pageCache) && p > 0,
+      )
+
+      if (pagesToFetch.length === 0) {
+        // Nothing to fetch; ensure current users are synced from cache
+        setState((s) => ({ ...s, users: s.pageCache[s.page] ?? s.users, loading: false }))
+        return
+      }
+
+      const requests = pagesToFetch.map(async (p) => {
+        const skip = (p - 1) * state.pageSize
+        return state.search
+          ? searchUsers({ q: state.search, limit: state.pageSize, skip }).then((res) => ({ p, res }))
+          : fetchUsers({ limit: state.pageSize, skip }).then((res) => ({ p, res }))
+      })
+
+      const results = await Promise.all(requests)
+
+      setState((s) => {
+        const newCache = { ...s.pageCache }
+        let total = s.total
+        for (const { p, res } of results) {
+          newCache[p] = res.users
+          total = res.total
+        }
+        return {
+          ...s,
+          pageCache: newCache,
+          users: newCache[s.page] ?? s.users,
+          total,
+          loading: false,
+        }
+      })
     } catch (e) {
       setState((s) => ({ ...s, loading: false, error: e instanceof Error ? e.message : 'Erreur inconnue' }))
     }
-  }, [state.page, state.pageSize, state.search])
+  }, [state.page, state.pageSize, state.search, state.pageCache])
 
   useEffect(() => {
     fetchList()
   }, [fetchList])
 
   const setSearch = useCallback((v: string) => {
-    setState((s) => ({ ...s, search: v, page: 1 }))
+    setState((s) => ({ ...s, search: v, page: 1, pageCache: {}, users: [] }))
   }, [])
 
   const setSort = useCallback((k: SortKey, d: SortDir) => {
@@ -63,7 +104,15 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
   }, [])
 
   const setPage = useCallback((p: number) => {
-    setState((s) => ({ ...s, page: Math.max(1, p) }))
+    setState((s) => {
+      const nextPage = Math.max(1, p)
+      return {
+        ...s,
+        page: nextPage,
+        // Immediately switch to cached users if present for smoother animation
+        users: s.pageCache[nextPage] ?? s.users,
+      }
+    })
   }, [])
 
   const sortedUsers = useMemo(() => {
@@ -95,6 +144,7 @@ export function useUsers(initial?: Partial<Pick<State, 'pageSize'>>) {
     sortDir: state.sortDir,
     page: state.page,
     pageSize: state.pageSize,
+    pageCache: state.pageCache,
     setSearch,
     setSort,
     setPage,

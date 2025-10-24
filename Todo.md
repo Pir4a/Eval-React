@@ -37,7 +37,7 @@ Offrir une expérience utilisateur fluide et bien structurée.
 Attendus
 • Reprendre les fonctionnalités précédentes.
 • Ajouter :
-• Système de favoris : clic sur une étoile de chaque Card → ajout/suppression,
+X Système de favoris : clic sur une étoile de chaque Card → ajout/suppression,
 persistant via localStorage.
 • Thème clair/sombre géré par un état global.
 • Tri dynamique via un menu déroulant.

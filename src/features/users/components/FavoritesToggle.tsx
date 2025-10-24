@@ -12,7 +12,8 @@ export function FavoritesToggle({ userId }: { userId: number }) {
     const nowFav = toggleFavorite(userId)
     setFav(nowFav)
     try {
-      window.dispatchEvent(new CustomEvent('favorites:changed'))
+      // include id and state for potential listeners
+      window.dispatchEvent(new CustomEvent('favorites:changed', { detail: { userId, fav: nowFav } }))
     } catch {
       // ignore
     }
@@ -23,7 +24,7 @@ export function FavoritesToggle({ userId }: { userId: number }) {
       onClick={onToggle}
       aria-pressed={fav}
       title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-      className="p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+      className="p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
     >
       {fav ? (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5 text-yellow-500">
