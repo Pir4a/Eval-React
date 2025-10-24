@@ -185,7 +185,7 @@ delay={0.1}>
       {/* Pagination */}
       <div className="mt-6 flex items-center justify-between text-sm">
         <button
-          className="rounded-md border text-neutral-700 dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
+          className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
           onClick={handlePrev}
           disabled={page === 1}
         >
@@ -200,7 +200,7 @@ delay={0.1}>
               <button
                 key={p}
                 onClick={() => handleGotoPage(p)}
-                className={`min-w-8 px-2 py-1 rounded-md border text-sm transition ${
+                className={`min-w-8 px-2 py-1 rounded-md border text-sm transition cursor-pointer ${
                   p === page
                     ? 'border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 bg-neutral-100 dark:bg-neutral-800'
                     : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
@@ -213,7 +213,7 @@ delay={0.1}>
         </div>
 
         <button
-          className="rounded-md border text-neutral-700 dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
+          className="rounded-md border text-neutral-700 hover:scale-105 cursor-pointer dark:text-neutral-400 border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
           onClick={handleNext}
           disabled={page >= pageCount}
         >
