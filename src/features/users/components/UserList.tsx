@@ -1,77 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
 import { UserCard } from './UserCard'
 import { SearchBar } from './SearchBar'
-import { SortMenu, type SortDir, type SortKey } from './SortMenu'
+import { SortMenu } from './SortMenu'
 import { Spinner } from '../../../components/ui/Spinner'
 import { ErrorMessage } from '../../../components/ui/ErrorMessage'
-import type { User } from '../types/User'
+import { useUsers } from '../hooks/useUsers'
 
 export default function UserList() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [sortKey, setSortKey] = useState<SortKey>('name')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [page, setPage] = useState(1)
-  const pageSize = 10
+  const { users, total, loading, error, search, sortKey, sortDir, page, pageSize, setSearch, setSort, setPage, refetch } = useUsers()
 
-  const fetchUsers = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('https://dummyjson.com/users')
-      if (!res.ok) throw new Error('Réponse invalide')
-      const data = (await res.json()) as { users: User[] }
-      setUsers(data.users)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    if (!term) return users
-    return users.filter((u) =>
-      [u.firstName, u.lastName, u.email].some((v) => (v || '').toLowerCase().includes(term))
-    )
-  }, [users, search])
-
-  const sorted = useMemo(() => {
-    const arr = [...filtered]
-    arr.sort((a, b) => {
-      let va: string | number = ''
-      let vb: string | number = ''
-      if (sortKey === 'name') {
-        va = `${a.firstName} ${a.lastName}`.toLowerCase()
-        vb = `${b.firstName} ${b.lastName}`.toLowerCase()
-      } else {
-        va = a.age ?? 0
-        vb = b.age ?? 0
-      }
-      if (va < vb) return sortDir === 'asc' ? -1 : 1
-      if (va > vb) return sortDir === 'asc' ? 1 : -1
-      return 0
-    })
-    return arr
-  }, [filtered, sortKey, sortDir])
-
-  const paged = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return sorted.slice(start, start + pageSize)
-  }, [sorted, page])
+ console.log(users)
+ console.log(total)
+ console.log(loading)
+ console.log(error)
+ console.log(search)
+ console.log(sortKey)
+ console.log(sortDir)
+ console.log(page)
+ console.log(pageSize)
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SearchBar value={search} onChange={setSearch} />
-        <SortMenu sortKey={sortKey} sortDir={sortDir} onChange={(k, d) => { setSortKey(k); setSortDir(d) }} />
+        <SortMenu sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
       </div>
 
       {loading && (
@@ -79,10 +30,10 @@ export default function UserList() {
           <Spinner /> Chargement...
         </div>
       )}
-      {error && <ErrorMessage message={error} onRetry={fetchUsers} className="mb-4" />}
+      {error && <ErrorMessage message={error} onRetry={refetch} className="mb-4" />}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paged.map((u) => (
+        {users.map((u) => (
           <UserCard key={u.id} user={u} />
         ))}
       </div>
@@ -91,7 +42,7 @@ export default function UserList() {
       <div className="mt-6 flex items-center justify-between text-sm">
         <button
           className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          onClick={() => setPage(page - 1)}
           disabled={page === 1}
         >
           Précédent
@@ -99,8 +50,8 @@ export default function UserList() {
         <span className="text-neutral-600 dark:text-neutral-400">Page {page}</span>
         <button
           className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 disabled:opacity-50"
-          onClick={() => setPage((p) => p + 1)}
-          disabled={sorted.length <= page * pageSize}
+          onClick={() => setPage(page + 1)}
+          disabled={users.length < pageSize && (page - 1) * pageSize + users.length >= total}
         >
           Suivant
         </button>

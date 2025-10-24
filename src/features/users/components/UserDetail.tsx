@@ -1,37 +1,11 @@
-import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Spinner } from '../../../components/ui/Spinner'
 import { ErrorMessage } from '../../../components/ui/ErrorMessage'
-import type { User } from '../types/User'
+import { useUser } from '../hooks/useUsers'
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let ignore = false
-    const run = async () => {
-      if (!id) return
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await fetch(`https://dummyjson.com/users/${id}`)
-        if (!res.ok) throw new Error('Utilisateur introuvable')
-        const data = (await res.json()) as User
-        if (!ignore) setUser(data)
-      } catch (e) {
-        if (!ignore) setError(e instanceof Error ? e.message : 'Erreur inconnue')
-      } finally {
-        if (!ignore) setLoading(false)
-      }
-    }
-    run()
-    return () => {
-      ignore = true
-    }
-  }, [id])
+  const { user, loading, error, refetch } = useUser(id)
 
   if (loading) {
     return (
@@ -40,7 +14,7 @@ export default function UserDetail() {
       </div>
     )
   }
-  if (error) return <div className="mx-auto max-w-3xl px-4 py-6"><ErrorMessage message={error} /></div>
+  if (error) return <div className="mx-auto max-w-3xl px-4 py-6"><ErrorMessage message={error} onRetry={refetch} /></div>
   if (!user) return null
 
   return (
@@ -64,8 +38,61 @@ export default function UserDetail() {
           <h2 className="font-medium mb-2">Informations</h2>
           <ul className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
             <li>Âge: {user.age ?? '—'}</li>
-            <li>Société: {user.company?.name ?? '—'}</li>
+            <li>Genre: {user.gender ?? '—'}</li>
+            <li>Date de naissance: {user.birthDate ?? '—'}</li>
+            <li>Groupe sanguin: {user.bloodGroup ?? '—'}</li>
+            <li>Taille: {user.height ?? '—'}</li>
+            <li>Poids: {user.weight ?? '—'}</li>
+            <li>Yeux: {user.eyeColor ?? '—'}</li>
+            <li>Cheveux: {user.hair?.color ?? '—'} {user.hair?.type ? `(${user.hair.type})` : ''}</li>
+            <li>Téléphone: {user.phone ?? '—'}</li>
+            <li>Username: {user.username ?? '—'}</li>
+            <li>IP: {user.ip ?? '—'}</li>
+            <li>Mac: {user.macAddress ?? '—'}</li>
+            <li>Nom de jeune fille: {user.maidenName ?? '—'}</li>
+            <li>Rôle: {user.role ?? '—'}</li>
+            <li>Université: {user.university ?? '—'}</li>
+            <li>EIN: {user.ein ?? '—'}</li>
+            <li>SSN: {user.ssn ?? '—'}</li>
+            <li>User Agent: {user.userAgent ?? '—'}</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+          <h2 className="font-medium mb-2">Adresse</h2>
+          <ul className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
+            <li>Rue: {user.address?.address ?? '—'}</li>
             <li>Ville: {user.address?.city ?? '—'}</li>
+            <li>État: {user.address?.state ?? '—'}</li>
+            <li>Code postal: {user.address?.postalCode ?? '—'}</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+          <h2 className="font-medium mb-2">Société</h2>
+          <ul className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
+            <li>Nom: {user.company?.name ?? '—'}</li>
+            <li>Département: {user.company?.department ?? '—'}</li>
+            <li>Titre: {user.company?.title ?? '—'}</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+          <h2 className="font-medium mb-2">Banque</h2>
+          <ul className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
+            <li>Type: {user.bank?.cardType ?? '—'}</li>
+            <li>Numéro: {user.bank?.cardNumber ?? '—'}</li>
+            <li>Expiration: {user.bank?.cardExpire ?? '—'}</li>
+            <li>IBAN: {user.bank?.iban ?? '—'}</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+          <h2 className="font-medium mb-2">Crypto</h2>
+          <ul className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
+            <li>Monnaie: {user.crypto?.coin ?? '—'}</li>
+            <li>Réseau: {user.crypto?.network ?? '—'}</li>
+            <li>Wallet: {user.crypto?.wallet ?? '—'}</li>
           </ul>
         </div>
       </div>
