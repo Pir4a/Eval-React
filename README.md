@@ -2,6 +2,8 @@
 
 Une application web moderne et performante pour gérer et afficher une liste d'utilisateurs, développée avec React, TypeScript, et Vite.
 
+Si vous avez le temps checkez mon portfolio hihi : https://stephane-dedu-devportfolio.vercel.app/
+
 ## 🚀 Démarrage rapide
 
 ### Installation
